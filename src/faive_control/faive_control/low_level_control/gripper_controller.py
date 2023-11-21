@@ -1,10 +1,10 @@
 from re import L
-from dynamixel_client import *
+from .dynamixel_client import *
 import numpy as np
 import time
 import yaml
 import os
-import finger_kinematics as fk
+from .finger_kinematics import pose2tendon_finger1
 from threading import RLock
 
 
@@ -202,7 +202,7 @@ class GripperController:
             t_nr = len(muscle_group.tendon_ids)
             j_nr = len(muscle_group.joint_ids)
             if muscle_group.name == "finger1":
-                tendon_lengths[t_idx:t_idx+t_nr] = fk.pose2tendon_finger1(joint_angles[j_idx],joint_angles[j_idx+1])
+                tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_finger1(joint_angles[j_idx],joint_angles[j_idx+1])
             j_idx += j_nr
             t_idx += t_nr
         return self.tendon_pos2motor_pos(tendon_lengths)

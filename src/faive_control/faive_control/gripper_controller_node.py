@@ -1,12 +1,10 @@
-#!/usr/bin/env python3
-
 import time
 import numpy as np
 from low_level_control.gripper_controller import GripperController
 # TODO: change it so that we don't copy gripper_controller.py to this faive_control
 # Do so by making faive_integration as a python package that is installed in the env, then can be called from anywhere
 # faive_integration is NOT a ROS package, it is a python package
-from low_level_control.gripper_controller_mujoco_sim import GripperControllerMujocoSim
+# from low_level_control.gripper_controller_mujoco_sim import GripperControllerMujocoSim
 
 import rospy
 from std_msgs.msg import Float32MultiArray
@@ -18,8 +16,8 @@ class GripperControlNode:
     def __init__(self, sim=False, sub_queue_size=1) -> None:
         if not sim:
             self.gripper_controller = GripperController("/dev/ttyUSB0")
-        else:
-            self.gripper_controller = GripperControllerMujocoSim()
+        # else:
+        #     self.gripper_controller = GripperControllerMujocoSim()
         self.gripper_controller.connect_to_dynamixels()
         self.gripper_controller.init_joints(calibrate=False)
 

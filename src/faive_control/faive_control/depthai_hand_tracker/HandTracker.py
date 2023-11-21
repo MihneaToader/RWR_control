@@ -1,10 +1,10 @@
 import numpy as np
 from collections import namedtuple
-import depthai_hand_tracker.mediapipe_utils as mpu 
-import depthai as dai
+import mediapipe_utils as mpu 
+import depthai_hand_tracker as dai
 import cv2
 from pathlib import Path
-from depthai_hand_tracker.FPS import FPS, now
+from FPS import FPS, now
 import time
 import sys
 from math import sin, cos

@@ -2,3 +2,6 @@
 build
 devel
 .vscode
+src/**/*.pyc
+src/**/__pycache__/
+*.pyc

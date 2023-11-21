@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import time
 import numpy as np
 import torch
@@ -30,7 +31,7 @@ class RetargeterNode:
         
         self.base_path = os.path.dirname(os.path.realpath(__file__))
 
-        self.joint_map = torch.zeros(30, 11).to(device)
+        self.joint_map = torch.zeros(22, 11).to(device)
 
         joint_parameter_names = retarget_utils.JOINT_PARAMETER_NAMES
         gc_tendons = retarget_utils.GC_TENDONS
@@ -58,7 +59,7 @@ class RetargeterNode:
         self.opt = torch.optim.RMSprop([self.gc_joints], lr=self.lr)
 
         self.root = torch.zeros(1, 3).to(self.device)
-        self.palm_offset = torch.tensor([0.0, 0.09, 0.0]).to(self.device)
+        self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
 
         
         self.scaling_coeffs = torch.tensor([0.7171, 1.0081, 0.9031, 0.7086, 0.4387, 0.3660, 0.3966, 0.3981, 0.4923,
@@ -91,7 +92,6 @@ class RetargeterNode:
         5-8: index
         9-12: middle
         13-16: ring
-        17-20: pinky
         """
 
         print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
@@ -117,7 +117,7 @@ class RetargeterNode:
         for finger, finger_joints in mano_joints_dict.items():
             mano_pps[finger] = finger_joints[[0], :]
 
-        mano_palm = torch.mean(torch.cat([joints[[0], :], mano_pps["index"], mano_pps["pinky"]], dim=0).to(
+        mano_palm = torch.mean(torch.cat([joints[[0], :], mano_pps["index"], mano_pps["ring"]], dim=0).to(
             self.device), dim=0, keepdim=True)
 
         keyvectors_mano = retarget_utils.get_keyvectors(
@@ -136,7 +136,7 @@ class RetargeterNode:
                 fingertips[finger] = chain_transforms[finger_tip].transform_points(
                     self.root)
 
-            palm = chain_transforms["root"].transform_points(
+            palm = chain_transforms["palm"].transform_points(
                 self.root) + self.palm_offset
 
             keyvectors_faive = retarget_utils.get_keyvectors(fingertips, palm)

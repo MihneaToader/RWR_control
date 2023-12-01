@@ -31,7 +31,7 @@ class RetargeterNode:
         
         self.base_path = os.path.dirname(os.path.realpath(__file__))
 
-        self.joint_map = torch.zeros(22, 11).to(device)
+        self.joint_map = torch.zeros(22, 10).to(device)
 
         joint_parameter_names = retarget_utils.JOINT_PARAMETER_NAMES
         gc_tendons = retarget_utils.GC_TENDONS
@@ -52,7 +52,7 @@ class RetargeterNode:
             open(self.urdf_filename).read()).to(device=self.device)
         os.chdir(prev_cwd)
 
-        self.gc_joints = torch.ones(11).to(self.device) * 30.0
+        self.gc_joints = torch.ones(10).to(self.device) * 30.0
         self.gc_joints.requires_grad_()
 
         self.lr = lr
@@ -99,7 +99,7 @@ class RetargeterNode:
         start_time = time.time()
 
         if not warm:
-            self.gc_joints = torch.ones(11).to(self.device) * 30.0
+            self.gc_joints = torch.ones(10).to(self.device) * 30.0
             self.gc_joints.requires_grad_()
 
         assert joints.shape == (
@@ -193,7 +193,7 @@ class RetargeterNode:
 
         time = rospy.Time.now()
         assert self.target_angles.shape == (
-            11,), "Expected different output format from retargeter"
+            10,), "Expected different output format from retargeter"
 
         msg = Float32MultiArray
 

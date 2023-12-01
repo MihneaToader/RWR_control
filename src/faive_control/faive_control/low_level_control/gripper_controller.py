@@ -193,7 +193,6 @@ class GripperController:
     def pose2motors(self, joint_angles):
         """ Input: joint angles in rad
         Output: motor positions 
-        TODO: Extend the calculation of the tendon lengths for every finger. Tip: A clever design can allow for the same formulas for each finger to reduce complexity.
         """
         tendon_lengths = np.zeros(len(self.tendon_ids))
         j_idx = 0
@@ -201,7 +200,9 @@ class GripperController:
         for muscle_group in self.muscle_groups:
             t_nr = len(muscle_group.tendon_ids)
             j_nr = len(muscle_group.joint_ids)
-            if muscle_group.name == "finger1":
+            if muscle_group.name is  not "thumb":
+                tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_finger1(joint_angles[j_idx],joint_angles[j_idx+1])
+            else:
                 tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_finger1(joint_angles[j_idx],joint_angles[j_idx+1])
             j_idx += j_nr
             t_idx += t_nr

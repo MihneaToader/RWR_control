@@ -1,12 +1,17 @@
 from re import L
-from .dynamixel_client import *
+from dynamixel_client import *
 import numpy as np
 import time
 import yaml
 import os
-from .finger_kinematics import pose2tendon_finger1
+from finger_kinematics import pose2tendon_finger, pose2tendon_thumb
 from threading import RLock
 
+
+# TODO: redo palm-thumb calculation
+#       do auto-calibration sequence
+#       check retargeter output packets
+#       do retargeter scaling
 
 class MuscleGroup:
     """
@@ -200,10 +205,10 @@ class GripperController:
         for muscle_group in self.muscle_groups:
             t_nr = len(muscle_group.tendon_ids)
             j_nr = len(muscle_group.joint_ids)
-            if muscle_group.name is  not "thumb":
-                tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_finger1(joint_angles[j_idx],joint_angles[j_idx+1])
+            if muscle_group.name != 'thumb':
+                tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_finger(joint_angles[j_idx],joint_angles[j_idx+1])
             else:
-                tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_finger1(joint_angles[j_idx],joint_angles[j_idx+1])
+                tendon_lengths[t_idx:t_idx+t_nr] = pose2tendon_thumb(*joint_angles[j_idx:j_idx+j_nr])
             j_idx += j_nr
             t_idx += t_nr
         return self.tendon_pos2motor_pos(tendon_lengths)
@@ -229,8 +234,8 @@ class GripperController:
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
             self.write_desired_motor_pos(self.motor_id2init_pos)
-            time.sleep(0.01)   
-            self.wait_for_motion()
+            time.sleep(2)   
+            # self.wait_for_motion()
 
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
 
@@ -239,23 +244,24 @@ class GripperController:
             input("Starting motor calibration. Press Enter and step away")
             
             # TODO: Find proper creep velocity and threshold current experimentally
-            creep_velocity = 0
-            threshold_current = 0
+            creep_velocity = 20
+            threshold_current = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
             # Set operating mode to desired velocity control
             self.set_operating_mode(1)
-            for motor_id in self.motor_ids:
-                print(f"Starting calibration procedure for motor {motor_id}")
-                self._dxc.write_profile_velocity([motor_id], np.asarray(creep_velocity))
-                _, _, current_current = self._dxc.read_pos_vel_cur()
-                current_current = current_current[motor_id]
-                while current_current < threshold_current:
-                    current_current = current_current[motor_id]
-                self._dxc.write_profile_velocity([motor_id], np.asarray(0))
-                print(f"Found max position for motor {motor_id}")
+            for i, motor_id in enumerate(self.motor_ids):
+                if motor_id not in [3, 9, 0]:
+                    print(f"Starting calibration procedure for motor {motor_id}")
+                    self._dxc.write_desired_velocity([motor_id], np.array([creep_velocity], dtype=np.double))
+                    _, vel, curr_current = self._dxc.read_pos_vel_cur()
+                    while curr_current[i] < threshold_current[i]:
+                        _, vel, curr_current = self._dxc.read_pos_vel_cur()
+                        print(curr_current[i], vel[i])
+                    self._dxc.write_desired_velocity([motor_id], np.array([0], dtype=np.double))
+                    print(f"Found max position for motor {motor_id}")
 
             self.motor_id2init_pos = self.get_motor_pos()
 
-            print(f"Motor positions after calibration (0-10): {self.motor_id2init_pos}")
+            print(f"Motor positions after calibration (0-9): {self.motor_id2init_pos}")
             # Set to current based position control mode
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))

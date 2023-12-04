@@ -15,11 +15,11 @@ import argparse
 class GripperControlNode:
     def __init__(self, sim=False, sub_queue_size=1) -> None:
         if not sim:
-            self.gripper_controller = GripperController("/dev/ttyUSB0")
+            self.gripper_controller = GripperController("/dev/ttyUSB0", calibration=True)
         # else:
         #     self.gripper_controller = GripperControllerMujocoSim()
-        self.gripper_controller.connect_to_dynamixels()
-        self.gripper_controller.init_joints(calibrate=False)
+        # self.gripper_controller.connect_to_dynamixels()
+        # self.gripper_controller.init_joints(calibrate=False)
 
         self.commmand_subscriber = rospy.Subscriber(
             '/faive/policy_output', Float32MultiArray, self.write_gripper_angles, queue_size=sub_queue_size)
@@ -31,7 +31,7 @@ class GripperControlNode:
         unpacked_msg = np.array(msg.data, dtype=np.float32).flatten()
         rospy.loginfo("Received message for GC")
         print(unpacked_msg.shape)
-        self.gripper_controller.command_joint_angles(unpacked_msg)
+        self.gripper_controller.write_desired_joint_angles(unpacked_msg)
         self.last_received_gc = time.monotonic()
 
 
@@ -49,5 +49,5 @@ if __name__ == "__main__":
     r = rospy.Rate(50)
     while not rospy.is_shutdown():
         if time.monotonic() - gc_node.last_received_gc > 3.0:
-            gc_node.gripper_controller.command_joint_angles(np.zeros(11,))
+            gc_node.gripper_controller.write_desired_joint_angles(np.zeros(11,))
         r.sleep()

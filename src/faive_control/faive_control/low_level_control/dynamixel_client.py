@@ -30,6 +30,7 @@ ADDR_TORQUE_ENABLE = 64
 ADDR_GOAL_POSITION = 116
 ADDR_GOAL_PWM = 100
 ADDR_GOAL_CURRENT = 102
+ADDR_GOAL_VELOCITY = 104
 ADDR_PROFILE_VELOCITY = 112
 ADDR_PRESENT_POSITION = 132
 ADDR_PRESENT_VELOCITY = 128
@@ -44,6 +45,7 @@ LEN_PRESENT_VELOCITY = 4
 LEN_PRESENT_CURRENT = 2
 LEN_PRESENT_POS_VEL_CUR = 10
 LEN_GOAL_POSITION = 4
+LEN_GOAL_VELOCITY = 4
 LEN_GOAL_PWM = 2
 LEN_GOAL_CURRENT = 2
 LEN_PROFILE_VELOCITY = 4
@@ -259,6 +261,10 @@ class DynamixelClient:
             assert len(motor_ids) == len(profile_velocity)
 
             self.sync_write(motor_ids, profile_velocity, ADDR_PROFILE_VELOCITY, LEN_PROFILE_VELOCITY)
+
+    def write_desired_velocity(self, motor_ids: Sequence[int], velocity: np.ndarray):
+        assert len(motor_ids) == len(velocity)
+        self.sync_write(motor_ids, velocity, ADDR_GOAL_VELOCITY, LEN_GOAL_VELOCITY)
 
     def write_byte(
             self,

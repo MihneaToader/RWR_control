@@ -62,13 +62,11 @@ class RetargeterNode:
         self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
 
         
-        self.scaling_coeffs = torch.tensor([0.7171, 1.0081, 0.9031, 0.7086, 0.4387, 0.3660, 0.3966, 0.3981, 0.4923,
-                                            0.7554, 0.8932, 1.1388, 1.1884, 1.3794, 1.5170]).to(self.device)
+        self.scaling_coeffs = torch.tensor([0.65, 0.6, 0.65, 0.6, 0.75, 0.75, 0.75, 1, 1, 1]).to(self.device)
         
         self.scaling_factors_set = hardcoded_keyvector_scaling
         
-        self.loss_coeffs = torch.tensor([5.0, 5.0, 5.0, 5.0, 5.0, 1.0, 1.0, 1.0, 1.0,
-                                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).to(self.device)
+        self.loss_coeffs = torch.tensor([5.0, 5.0, 5.0, 5.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]).to(self.device)
 
         if use_scalar_distance_palm:
             self.use_scalar_distance = [False, True, True, True, True, False, False, False, False, False, False, False, False, False, False]
@@ -216,6 +214,7 @@ class RetargeterNode:
         msg.layout.dim = [rows_dim, cols_dim]
 
         msg.data = self.target_angles
+        # print(msg)
         self.pub.publish(msg)
 
 

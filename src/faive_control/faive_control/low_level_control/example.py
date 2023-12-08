@@ -10,12 +10,12 @@ homepos = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 goalpos1 = [0, 0, 0, 0, 90, 90, 90, 90, 90, 90]
 goalpos2 = [0, 0, 0, 0, 0, 90, 0, 90, 0, 90]
 goalpos3 = [0, 0, 0, 0, 90, 0, 90, 0, 90, 0]
-goalpos4 = [45, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+goalpos4 = [-45, -45, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 def main():
     global gc
-    gc = GripperController(port="/dev/ttyUSB0",calibration=True)
+    gc = GripperController(port="/dev/ttyUSB0",calibration=False)
 
     # print("+++++++STARTING+++++")
     # for i in range(90):
@@ -30,11 +30,15 @@ def main():
 
     time.sleep(1)
 
+    print("Moving")
+
     gc.write_desired_joint_angles(goalpos4)
 
     # gc.wait_for_motion()
 
-    time.sleep(3)
+    print("Stopped moving")
+
+    time.sleep(5)
 
     # gc.write_desired_joint_angles(homepos)
 

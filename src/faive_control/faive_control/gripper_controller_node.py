@@ -15,7 +15,7 @@ import argparse
 class GripperControlNode:
     def __init__(self, sim=False, sub_queue_size=1) -> None:
         if not sim:
-            self.gripper_controller = GripperController("/dev/ttyUSB0", calibration=True)
+            self.gripper_controller = GripperController("/dev/ttyUSB0", calibration=False)
         # else:
         #     self.gripper_controller = GripperControllerMujocoSim()
         # self.gripper_controller.connect_to_dynamixels()

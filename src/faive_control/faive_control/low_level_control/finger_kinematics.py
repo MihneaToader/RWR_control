@@ -40,7 +40,7 @@ def tendonlength_cage_joint(theta_cage_joint):
    DY_ROUTE_ROT_AX = 18.91
 
    DZ_ROUTE_CAGE_SQ = 0.009
-   dl = np.sqrt(DZ_ROUTE_CAGE_SQ + (DX_ROUTE_ROT_AX + R_CAGE_ROT * np.cos(THETA_MIN + theta_cage_joint)) * 2 + (-DY_ROUTE_ROT_AX + R_CAGE_ROT * np.sin(THETA_MIN + theta_cage_joint)) * 2)
+   dl = np.sqrt(DZ_ROUTE_CAGE_SQ + (DX_ROUTE_ROT_AX + R_CAGE_ROT * np.cos(THETA_MIN + theta_cage_joint)) ** 2 + (-DY_ROUTE_ROT_AX + R_CAGE_ROT * np.sin(THETA_MIN + theta_cage_joint)) ** 2)
    return L0 - dl
 
 # ------------------- Calculations of Tendon Lengths for all joints ------------------- #

@@ -1,10 +1,10 @@
 from re import L
-from .dynamixel_client import *
+from dynamixel_client import *
 import numpy as np
 import time
 import yaml
 import os
-from .finger_kinematics import pose2tendon_finger, pose2tendon_thumb
+from finger_kinematics import pose2tendon_finger, pose2tendon_thumb
 from threading import RLock
 
 
@@ -217,7 +217,6 @@ class GripperController:
         """
         Set the offsets based on the current (initial) motor positions
         :param calibrate: if True, perform calibration and set the offsets else move to the initial position
-        TODO: Think of a clever way to perform the calibration. How can you make sure that all the motor are in the corect position?
         """
 
         cal_yaml_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cal.yaml")
@@ -243,9 +242,8 @@ class GripperController:
             self.disable_torque()
             input("Starting motor calibration. Press Enter and step away")
             
-            # TODO: Find proper creep velocity and threshold current experimentally
             creep_velocity = 20
-            threshold_current = [80, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25]
+            threshold_current = [140, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25]
             # Set operating mode to desired velocity control
             self.set_operating_mode(1)
             for i, motor_id in enumerate(self.motor_ids):
@@ -277,6 +275,10 @@ class GripperController:
             with open(cal_yaml_fname, 'w') as cal_file:
                 yaml.dump(cal_orig, cal_file, default_flow_style=False)
 
+        self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
+        self.write_desired_joint_angles([80, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        time.sleep(1)
+        self.motor_id2init_pos = self.get_motor_pos()
         self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
 
     def write_desired_joint_angles(self, joint_angles: np.array):

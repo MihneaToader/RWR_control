@@ -62,7 +62,7 @@ class RetargeterNode:
         self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
 
         
-        self.scaling_coeffs = torch.tensor([0.65, 0.6, 0.65, 0.6, 0.75, 0.75, 0.75, 1, 1, 1]).to(self.device)
+        self.scaling_coeffs = torch.tensor([0.65, 0.6, 0.7, 0.7, 0.6, 0.75, 0.75, 1, 1, 1]).to(self.device)
         
         self.scaling_factors_set = hardcoded_keyvector_scaling
         

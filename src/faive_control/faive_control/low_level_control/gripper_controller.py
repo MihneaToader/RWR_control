@@ -1,10 +1,10 @@
 from re import L
-from dynamixel_client import *
+from .dynamixel_client import *
 import numpy as np
 import time
 import yaml
 import os
-from finger_kinematics import pose2tendon_finger, pose2tendon_thumb
+from .finger_kinematics import pose2tendon_finger, pose2tendon_thumb
 from threading import RLock
 
 
@@ -51,7 +51,7 @@ class GripperController:
         self.connect_to_dynamixels()
 
         # initialize the joint
-        self.init_joints(calibrate=calibration, maxCurrent=maxCurrent)
+        self.init_joints(calibrate=calibration, maxCurrent=500)
 
     def terminate(self):
         '''
@@ -213,7 +213,7 @@ class GripperController:
             t_idx += t_nr
         return self.tendon_pos2motor_pos(tendon_lengths)
 
-    def init_joints(self, calibrate: bool = False, maxCurrent: int = 150):
+    def init_joints(self, calibrate: bool = False, maxCurrent: int = 500):
         """
         Set the offsets based on the current (initial) motor positions
         :param calibrate: if True, perform calibration and set the offsets else move to the initial position
@@ -243,15 +243,16 @@ class GripperController:
             input("Starting motor calibration. Press Enter and step away")
             
             creep_velocity = 20
-            threshold_current = [140, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25]
+            direction = [1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1]
+            threshold_current = [160, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
             # Set operating mode to desired velocity control
             self.set_operating_mode(1)
             for i, motor_id in enumerate(self.motor_ids):
-                if motor_id not in [3, 9, 0]:
+                if motor_id not in [3]:
                     print(f"Starting calibration procedure for motor {motor_id}")
-                    self._dxc.write_desired_velocity([motor_id], np.array([creep_velocity], dtype=np.double))
+                    self._dxc.write_desired_velocity([motor_id], np.array([direction[motor_id] * creep_velocity], dtype=np.double))
                     _, vel, curr_current = self._dxc.read_pos_vel_cur()
-                    while curr_current[i] < threshold_current[i]:
+                    while curr_current[i] < direction[motor_id] * threshold_current[i]:
                         _, vel, curr_current = self._dxc.read_pos_vel_cur()
                         print(curr_current[i], vel[i])
                     self._dxc.write_desired_velocity([motor_id], np.array([0], dtype=np.double))
@@ -275,9 +276,6 @@ class GripperController:
             with open(cal_yaml_fname, 'w') as cal_file:
                 yaml.dump(cal_orig, cal_file, default_flow_style=False)
 
-        self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
-        self.write_desired_joint_angles([80, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        time.sleep(1)
         self.motor_id2init_pos = self.get_motor_pos()
         self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
 

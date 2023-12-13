@@ -24,7 +24,7 @@ limitations under the License.
             
             <!--thumb-->
             <body name="cage" xyaxes="0 0 1 -1 0 0" pos="-0.038655 -0.049977 0.005">
-                <joint name="palm2cage" axis="1 0 0" range="-90 0"/> 
+                <joint name="palm2cage" axis="1 0 0" range="-70 0"/> 
                 <geom mesh="thumb_motor"/>          
                 <body name="thumb_base" pos="-0.017 0 0.021" xyaxes="0 0 -1 1 0 0">
                     <joint name="cage2base" axis="1 0 0" range="-180 180"/>

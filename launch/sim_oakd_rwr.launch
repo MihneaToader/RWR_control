@@ -1,0 +1,9 @@
+<launch>
+   <arg name="venv" value="/usr/bin/env python"/>
+   <arg name="sim" value="True"/>
+  
+  <node name="mano_ingress_publisher" pkg="faive_control" type="oakd_hand_tracker_ingress.py" output="screen" launch-prefix = "$(arg venv)" />
+  <node name="mano_faive_retargeter" pkg="faive_control" type="mano_faive_retargeter.py" output="screen" launch-prefix = "$(arg venv)" />
+  <node name="gripper_controller_node" pkg="faive_control" type="gripper_controller_node.py" output="screen" launch-prefix = "$(arg venv)" args="$(arg sim)"/>
+
+</launch>

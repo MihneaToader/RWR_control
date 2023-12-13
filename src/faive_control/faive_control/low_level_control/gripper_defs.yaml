@@ -11,19 +11,19 @@ muscle_groups:
     tendon_ids: [6, 7, 8, 9]        # ids for each tendon according to joints, first flexor then extensor, from proximal to distal
     motor_ids: [8, 1]               # ids of motors for this muscle group
     motor_map: [8, 8, 1, 1]         # maps each tendon to a certain motor. antagonistic tendons have same motor id in motor_map
-    spool_rad: [7.2, -10, 9, -10]   # defines spool radius and wind direction for each tendon. 
+    spool_rad: [7.2, -10, -9, 10]   # defines spool radius and wind direction for each tendon. 
                                     # wind direction is positive, if tendon attaches on the right side of the spool (from the front of the motor)
   middle:
     joint_ids: [6, 7]               # ids for each controllable joint from proximal to distal
     tendon_ids: [10, 11, 12, 13]    # ids for each tendon according to joints, first flexor then extensor, from proximal to distal
     motor_ids: [6, 2]               # ids of motors for this muscle group
     motor_map: [6, 6, 2, 2]         # maps each tendon to a certain motor. antagonistic tendons have same motor id in motor_map
-    spool_rad: [7.2, -10, 9, -10]   # defines spool radius and wind direction for each tendon. 
+    spool_rad: [7.2, -10, -9, 10]   # defines spool radius and wind direction for each tendon. 
                                     # wind direction is positive, if tendon attaches on the right side of the spool (from the front of the motor)
   ring:
     joint_ids: [8, 9]               # ids for each controllable joint from proximal to distal
     tendon_ids: [14, 15, 16, 17]    # ids for each tendon according to joints, first flexor then extensor, from proximal to distal
     motor_ids: [7, 4]               # ids of motors for this muscle group
     motor_map: [7, 7, 4, 4]         # maps each tendon to a certain motor. antagonistic tendons have same motor id in motor_map
-    spool_rad: [7.2, -10, 9, -10]   # defines spool radius and wind direction for each tendon. 
+    spool_rad: [7.2, -10, -9, 10]   # defines spool radius and wind direction for each tendon. 
                                     # wind direction is positive, if tendon attaches on the right side of the spool (from the front of the motor)

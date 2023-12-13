@@ -6,6 +6,8 @@ from torch.nn.functional import normalize
 import os
 import pytorch_kinematics as pk
 import rospy
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 
 from utils import retarget_utils, gripper_utils
@@ -26,6 +28,8 @@ class RetargeterNode:
         '''
         
         self.target_angles = None
+
+        self.use_joints = True
 
         self.device = device
         
@@ -62,7 +66,7 @@ class RetargeterNode:
         self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
 
         
-        self.scaling_coeffs = torch.tensor([0.65, 0.6, 0.7, 0.7, 0.6, 0.75, 0.75, 1, 1, 1]).to(self.device)
+        self.scaling_coeffs = torch.tensor([0.4, 0.5, 0.6, 0.7, 0.3, 0.33, 0.36, 1, 1, 1]).to(self.device)
         
         self.scaling_factors_set = hardcoded_keyvector_scaling
         
@@ -120,8 +124,27 @@ class RetargeterNode:
 
         keyvectors_mano = retarget_utils.get_keyvectors(
             mano_fingertips, mano_palm)
+        rot_mat_z = torch.tensor(retarget_utils.rotation_matrix_z(-np.pi/2).astype(np.float32))
+        rot_mat_x = torch.tensor(retarget_utils.rotation_matrix_x(np.pi).astype(np.float32))
+        rot_mat = torch.matmul(rot_mat_x, rot_mat_z)
+        for k, v in keyvectors_mano.items():
+            keyvectors_mano[k] = torch.matmul(rot_mat, v.t()).t()
         # norms_mano = {k: torch.norm(v) for k, v in keyvectors_mano.items()}
         # print(f"keyvectors_mano: {norms_mano}")
+        # fig = plt.figure()
+        # ax = plt.axes(projection='3d')
+
+        # x, y, z = np.zeros((3, 4))
+        # u = []
+        # v = []
+        # w = []
+
+        # for finger, finger_joints in keyvectors_mano.items():
+        #     u.append(finger_joints[0, 0])
+        #     v.append(finger_joints[0, 1])
+        #     w.append(finger_joints[0, 2])
+
+        # ax.quiver(x,y,z,u,v,w,arrow_length_ratio=0.1)
 
         gc_limits_lower = gripper_utils.GC_LIMITS_LOWER
         gc_limits_upper = gripper_utils.GC_LIMITS_UPPER
@@ -133,7 +156,10 @@ class RetargeterNode:
             for finger, finger_tip in retarget_utils.FINGER_TO_TIP.items():
                 fingertips[finger] = chain_transforms[finger_tip].transform_points(
                     self.root)
-
+            # print(f"FINGERTIPS:{fingertips}")
+            # print("+++++++++++++++++++++++++++++++++++++++++++++++")
+            # print(f"MANO_JOINTS_DICT:{mano_joints_dict}")
+            # print("+++++++++++++++++++++++++++++++++++++++++++++++")
             palm = chain_transforms["palm"].transform_points(
                 self.root) + self.palm_offset
 
@@ -147,6 +173,11 @@ class RetargeterNode:
             #             keyvector_mano, p=2) / torch.norm(keyvector_faive, p=2)
             # print(f'Scaling factors: {self.scaling_coeffs.shape}')
 
+            # print(f"KEYVECTORS_FAIVE:{keyvectors_faive}")
+            # print("+++++++++++++++++++++++++++++++++++++++++++++++")
+
+            # print(f"KEYVECTORS_MANO:{keyvectors_mano}")
+            # print("+++++++++++++++++++++++++++++++++++++++++++++++")
             loss = 0
             
             if dynamic_keyvector_scaling or not self.scaling_factors_set:
@@ -172,6 +203,7 @@ class RetargeterNode:
             self.opt.zero_grad()
             loss.backward()
             self.opt.step()
+            
             with torch.no_grad():
                 self.gc_joints[:] = torch.clamp(self.gc_joints, torch.tensor(gc_limits_lower).to(
                     self.device), torch.tensor(gc_limits_upper).to(self.device))
@@ -179,6 +211,17 @@ class RetargeterNode:
         finger_joint_angles = self.gc_joints.detach().cpu().numpy()
 
         print(f'Retarget time: {(time.time() - start_time) * 1000} ms')
+        # x, y, z = np.zeros((3, 4))
+        # u = []
+        # v = []
+        # w = []
+        # for i, finger_joints in enumerate(keyvectors_faive.values()):
+        #     u.append(finger_joints[0, 0].detach()* self.scaling_coeffs[i].detach())
+        #     v.append(finger_joints[0, 1].detach()* self.scaling_coeffs[i].detach())
+        #     w.append(finger_joints[0, 2].detach()* self.scaling_coeffs[i].detach())
+
+        # ax.quiver(x,y,z,u,v,w,arrow_length_ratio=0.1, color='red')
+        # plt.show()
 
         return finger_joint_angles
 
@@ -187,7 +230,7 @@ class RetargeterNode:
         joints = np.array(msg.data, dtype=np.float32).reshape(
             msg.layout.dim[0].size, msg.layout.dim[1].size)
        
-        self.target_angles = self.retarget_finger_mano_joints(joints)
+        self.target_angles = self.retarget_finger_mano_joints(joints, opt_steps=4)
 
         time = rospy.Time.now()
         assert self.target_angles.shape == (
@@ -214,7 +257,7 @@ class RetargeterNode:
         msg.layout.dim = [rows_dim, cols_dim]
 
         msg.data = self.target_angles
-        # print(msg)
+        print(msg)
         self.pub.publish(msg)
 
 

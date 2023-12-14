@@ -14,9 +14,8 @@ class GripperControlNode:
         self.sim=True
         if not self.sim:
             self.gripper_controller = GripperController("/dev/ttyUSB0", calibration=True)
-            self.gripper_controller_sim = GripperControllerMujocoSim()
         else:
-            self.gripper_controller_sim = GripperControllerMujocoSim()
+            self.gripper_controller = GripperControllerMujocoSim()
 
         self.commmand_subscriber = rospy.Subscriber(
             '/faive/policy_output', Float32MultiArray, self.write_gripper_angles, queue_size=sub_queue_size)
@@ -28,10 +27,9 @@ class GripperControlNode:
         unpacked_msg = np.array(msg.data, dtype=np.float32).flatten()
         rospy.loginfo("Received message for GC")
         print(unpacked_msg.shape)
-        self.gripper_controller_sim.write_desired_joint_angles(unpacked_msg)
         if not self.sim:
             unpacked_msg[0] += 70
-            self.gripper_controller.write_desired_joint_angles(unpacked_msg)
+        self.gripper_controller.write_desired_joint_angles(unpacked_msg)
         self.last_received_gc = time.monotonic()
 
 

@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <mujoco model="right_hand_modular">
-    <compiler angle="degree"/>
+    <compiler angle="radian"/>
     <include file="hand_metadata.xml"/>
     <worldbody>
         <include file="hand_structure.xml"/>

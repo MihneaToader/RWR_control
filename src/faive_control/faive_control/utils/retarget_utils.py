@@ -34,13 +34,13 @@ GC_TENDONS = {
     'palm2cage': {},
     'cage2base': {},
     'thumb_base2basevirt': {'thumb_basevirt2pf': 1},
-    'thumb_pf2pfvirt': {'thumb_pfvirt2mf': 1, 'thumb_mf2df': 2},
+    'thumb_pf2pfvirt': {'thumb_pfvirt2mf': 1, 'thumb_mf2df': 2.25},
     'index_base2basevirt': {'index_basevirt2pf': 1},
-    'index_pf2pfvirt': {'index_pfvirt2mf': 1, 'index_mf2df': 2},
+    'index_pf2pfvirt': {'index_pfvirt2mf': 1, 'index_mf2df': 2.25},
     'middle_base2basevirt': {'middle_basevirt2pf': 1},
-    'middle_pf2pfvirt': {'middle_pfvirt2mf': 1, 'middle_mf2df': 2},
+    'middle_pf2pfvirt': {'middle_pfvirt2mf': 1, 'middle_mf2df': 2.25},
     'ring_base2basevirt': {'ring_basevirt2pf': 1},
-    'ring_pf2pfvirt': {'ring_pfvirt2mf': 1, 'ring_mf2df': 2},
+    'ring_pf2pfvirt': {'ring_pfvirt2mf': 1, 'ring_mf2df': 2.25},
 }
 
 FINGER_CHAINS = {
@@ -162,6 +162,10 @@ def get_mano_pps_batch(mano_joints_dict):
 
 def get_keyvectors(fingertips: Dict[str, torch.Tensor], palm: torch.Tensor):
     return {
+        'palm2thumb': fingertips['thumb'] - palm,
+        'palm2index': fingertips['index'] - palm,
+        'palm2middle': fingertips['middle'] - palm,
+        'palm2ring': fingertips['ring'] - palm,
         'thumb2index': fingertips['index'] - fingertips['thumb'],
         'thumb2middle': fingertips['middle'] - fingertips['thumb'],
         'thumb2ring': fingertips['ring'] - fingertips['thumb'],

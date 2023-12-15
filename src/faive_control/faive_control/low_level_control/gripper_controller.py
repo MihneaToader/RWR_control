@@ -1,10 +1,10 @@
 from re import L
-from .dynamixel_client import *
+from dynamixel_client import *
 import numpy as np
 import time
 import yaml
 import os
-from .finger_kinematics import pose2tendon_finger, pose2tendon_thumb
+from finger_kinematics import pose2tendon_finger, pose2tendon_thumb
 from threading import RLock
 
 
@@ -244,7 +244,7 @@ class GripperController:
             
             creep_velocity = 20
             direction = [1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1]
-            threshold_current = [160, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
+            threshold_current = [160, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
             # Set operating mode to desired velocity control
             self.set_operating_mode(1)
             for i, motor_id in enumerate(self.motor_ids):

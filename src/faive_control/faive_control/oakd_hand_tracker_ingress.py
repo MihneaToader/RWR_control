@@ -65,7 +65,7 @@ class OakDIngress:
             DEVICE_MXID=None,
         )
         
-        self.smoother = LandmarksSmoothingFilter(min_cutoff=1, beta=20, derivate_cutoff=10, disable_value_scaling=True)
+        self.smoother = LandmarksSmoothingFilter(min_cutoff=1.2, beta=0.6, derivate_cutoff=100, disable_value_scaling=True)
 
         # set up ROS
         self.joint_pub = rospy.Publisher(

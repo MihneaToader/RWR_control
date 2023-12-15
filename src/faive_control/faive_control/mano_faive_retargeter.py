@@ -8,12 +8,14 @@ import pytorch_kinematics as pk
 import rospy
 import matplotlib
 import matplotlib.pyplot as plt
+import tkinter
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 
 from utils import retarget_utils, gripper_utils
 
+PINCH_RANGE = 0.033
 
 class RetargeterNode:
     def __init__(
@@ -66,9 +68,8 @@ class RetargeterNode:
 
         self.root = torch.zeros(1, 3).to(self.device)
         self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
-
         
-        self.scaling_coeffs = torch.tensor([0.52, 0.58, 0.62, 0.7, 0.75, 0.8]).to(self.device)
+        self.scaling_coeffs = torch.tensor([0.6, 0.7, 0.68, 0.66, 0.9, 0.88, 0.86, 0.8, 0.8, 0.8]).to(self.device)
         
         self.scaling_factors_set = hardcoded_keyvector_scaling
         
@@ -86,9 +87,9 @@ class RetargeterNode:
         self.faive_vectors = None
         self.mano_vectors = None
         self.ani = FuncAnimation(self.figure, self.update_plot, interval=100)  # Update interval in milliseconds
-        self.ax.set_xlim([-0.15, 0.15])
-        self.ax.set_ylim([-0.15, 0.15])
-        self.ax.set_zlim([-0.15, 0.15])
+        self.ax.set_xlim([-0.05, 0.1])
+        self.ax.set_ylim([-0.05, 0.1])
+        self.ax.set_zlim([-0.05, 0.1])
 
         self.sub = rospy.Subscriber(
             '/ingress/mano', Float32MultiArray, self.callback, queue_size=1, buff_size=2**24)
@@ -151,24 +152,34 @@ class RetargeterNode:
         rot_mat = torch.matmul(rot_mat_x, rot_mat_z)
         for k, v in keyvectors_mano.items():
             keyvectors_mano[k] = torch.matmul(rot_mat, v.t()).t()
-        # norms_mano = {k: torch.norm(v) for k, v in keyvectors_mano.items()}
-        # print(f"keyvectors_mano: {norms_mano}")
+        norms_mano = {k: torch.norm(v) for k, v in keyvectors_mano.items()}
+        print(f"keyvectors_mano: {norms_mano}")
+        if norms_mano["thumb2index"] < PINCH_RANGE:
+            keyvectors_mano["thumb2index"] = torch.tensor([[0.0, 0.0, 0.0]])
+        if norms_mano["thumb2middle"] < PINCH_RANGE:
+            keyvectors_mano["thumb2middle"] = torch.tensor([[0.0, 0.0, 0.0]])
+        if norms_mano["thumb2ring"] < PINCH_RANGE:
+            keyvectors_mano["thumb2ring"] = torch.tensor([[0.0, 0.0, 0.0]])
         x, y, z = [], [], []
         u, v, w = [], [], []
 
         for i, (finger, finger_joints) in enumerate(keyvectors_mano.items()):
-            if i < 3:
+            if i < 4:
                 x.append(0)
                 y.append(0)
                 z.append(0)
-            elif i < 6:
-                x.append(keyvectors_mano["thumb2index"][0, 0])
-                y.append(keyvectors_mano["thumb2index"][0, 1])
-                z.append(keyvectors_mano["thumb2index"][0, 2])
+            elif i < 7:
+                x.append(keyvectors_mano["palm2thumb"][0, 0])
+                y.append(keyvectors_mano["palm2thumb"][0, 1])
+                z.append(keyvectors_mano["palm2thumb"][0, 2])
+            elif i < 9:
+                x.append(keyvectors_mano["palm2index"][0, 0])
+                y.append(keyvectors_mano["palm2index"][0, 1])
+                z.append(keyvectors_mano["palm2index"][0, 2])
             else:
-                x.append(keyvectors_mano["thumb2middle"][0, 0])
-                y.append(keyvectors_mano["thumb2middle"][0, 1])
-                z.append(keyvectors_mano["thumb2middle"][0, 2])
+                x.append(keyvectors_mano["palm2middle"][0, 0])
+                y.append(keyvectors_mano["palm2middle"][0, 1])
+                z.append(keyvectors_mano["palm2middle"][0, 2])
             u.append(finger_joints[0, 0])
             v.append(finger_joints[0, 1])
             w.append(finger_joints[0, 2])
@@ -200,7 +211,7 @@ class RetargeterNode:
             #     for i, (keyvector_faive, keyvector_mano) in enumerate(zip(keyvectors_faive.values(), keyvectors_mano.values())):
             #         self.scaling_coeffs[i] = torch.norm(
             #             keyvector_mano, p=2) / torch.norm(keyvector_faive, p=2)
-            # print(f'Scaling factors: {self.scaling_coeffs.shape}')
+            # print(f'Scaling factors: {self.scaling_coeffs}')
 
             # print(f"KEYVECTORS_FAIVE:{keyvectors_faive}")
             # print("+++++++++++++++++++++++++++++++++++++++++++++++")
@@ -232,10 +243,11 @@ class RetargeterNode:
             self.opt.zero_grad()
             loss.backward()
             self.opt.step()
-            
+            print(self.gc_joints)
             with torch.no_grad():
                 self.gc_joints[:] = torch.clamp(self.gc_joints, torch.tensor(gc_limits_lower).to(
                     self.device), torch.tensor(gc_limits_upper).to(self.device))
+            print(self.gc_joints)
 
         finger_joint_angles = self.gc_joints.detach().cpu().numpy()
 
@@ -272,7 +284,7 @@ class RetargeterNode:
         joints = np.array(msg.data, dtype=np.float32).reshape(
             msg.layout.dim[0].size, msg.layout.dim[1].size)
        
-        self.target_angles = self.retarget_finger_mano_joints(joints, opt_steps=3)
+        self.target_angles = self.retarget_finger_mano_joints(joints, opt_steps=2)
 
         time = rospy.Time.now()
         assert self.target_angles.shape == (

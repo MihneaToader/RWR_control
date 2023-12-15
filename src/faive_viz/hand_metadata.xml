@@ -18,7 +18,7 @@ limitations under the License.
 -->
 
 <mujoco>
-    <compiler angle="degree"/>
+    <compiler angle="radian"/>
     <default>
         <!-- use same geom params as the Shadow Hand model in IsaacGymEnv for now -->
         <!-- the density is adjusted so that the total weight of the hand part (not including the base) is the same as the real hand (106g) (therefore the base will have a wrong mass, which shouldn't matter for now) -->
@@ -35,21 +35,37 @@ limitations under the License.
         <!-- IsaacGym somehow does not respect the default mesh scale so set each of them manually here... -->
         
         <!--mesh name="base" file="mesh/base.stl" scale="1 1 1"/-->
-        <mesh name="palm_main" file="mesh/Palm_main.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="palm_main" file="mesh/Palm_main_bis.stl" scale="0.001 0.001 0.001"/>
         <mesh name="palm_thumb" file="mesh/Palm_Thumb.stl" scale="0.001 0.001 0.001"/>
-        <mesh name="palm_fingsup" file="mesh/PALM_WO.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="palm_index_fingsup" file="mesh/PALM_WO.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="palm_middle_fingsup" file="mesh/PALM_WO.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="palm_ring_fingsup" file="mesh/PALM_WO.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="rack" file="mesh/Rack.stl" scale="0.001 0.001 0.001"/>
 
         <mesh name="thumb_base" file="mesh/base_thumb.stl" scale="0.001 0.001 0.001"/>
-        <mesh name="thumb_motor" file="mesh/MOTOR_CAGE.stl" scale="0.001 0.001 0.001"/>
-
-        <mesh name="finger_pf" file="mesh/PF_bone.stl" scale="0.001 0.001 0.001"/>
-        <mesh name="finger_mf" file="mesh/MF_bone.stl" scale="0.001 0.001 0.001"/>
-        <mesh name="finger_df" file="mesh/DF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="thumb_motor" file="mesh/MOTOR_CAGE_HEADLESS.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="thumb_pf" file="mesh/PF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="thumb_mf" file="mesh/MF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="thumb_df" file="mesh/DF_bone.stl" scale="0.001 0.001 0.001"/>
+        
+        <mesh name="index_pf" file="mesh/PF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="index_mf" file="mesh/MF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="index_df" file="mesh/DF_bone.stl" scale="0.001 0.001 0.001"/>
+        
+        <mesh name="middle_pf" file="mesh/PF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="middle_mf" file="mesh/MF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="middle_df" file="mesh/DF_bone.stl" scale="0.001 0.001 0.001"/>
+        
+        <mesh name="ring_pf" file="mesh/PF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="ring_mf" file="mesh/MF_bone.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="ring_df" file="mesh/DF_bone.stl" scale="0.001 0.001 0.001"/>
 
     </asset>
     <contact>
         <!-- neighboring bodies are excluded from contact calculation -->
+        <!--
         <exclude body1="palm" body2="cage"/>
+        <exclude body1="root" body2="palm"/>
         <exclude body1="cage" body2="thumb_base"/>
         <exclude body1="thumb_base" body2="thumb_pf"/>
         <exclude body1="thumb_pf" body2="thumb_mf"/>
@@ -69,6 +85,7 @@ limitations under the License.
         <exclude body1="index_fingsup" body2="index_pf"/>
         <exclude body1="index_pf" body2="index_mf"/>
         <exclude body1="index_mf" body2="index_df"/>
+        -->
     </contact>
 
     <sensor>
@@ -103,20 +120,20 @@ limitations under the License.
         
         note: the "gear" attribute allows a scaling to be applied from the actuator dimensions to the joint dimensions, but it seems not to be completely supported in IsaacGym so don't use it.
         -->
-        <position name="palm2cage" joint="palm2cage" ctrlrange="-1.57 0"/>
-        <position name="cage2base" joint="cage2base" ctrlrange="-3.14 3.14"/>
+        <position name="palm2cage" joint="palm2cage" ctrlrange="-1 0"/>
+        <position name="cage2base" joint="cage2base" ctrlrange="-1.74533 0"/>
 
         <position name="thumb_base2pp" joint="thumb_basevirt2pf" ctrlrange="0 0.78"/>
-        <position name="thumb_pf2mf" joint="thumb_pfvirt2mf" ctrlrange="0 0.78" kp="4"/>
+        <position name="thumb_pf2mf" joint="thumb_pfvirt2mf" ctrlrange="0 0.698" kp="4"/>
         
         <position name="index_base2pp" joint="index_basevirt2pf" ctrlrange="0 0.78"/>
-        <position name="index_pf2mf" joint="index_pfvirt2mf" ctrlrange="0 0.78" kp="4"/>
+        <position name="index_pf2mf" joint="index_pfvirt2mf" ctrlrange="0 0.698" kp="4"/>
 
         <position name="middle_base2pp" joint="middle_basevirt2pf" ctrlrange="0 0.78"/>
-        <position name="middle_pf2mf" joint="middle_pfvirt2mf" ctrlrange="0 0.78" kp="4"/>
+        <position name="middle_pf2mf" joint="middle_pfvirt2mf" ctrlrange="0 0.698" kp="4"/>
 
         <position name="ring_base2pp" joint="ring_basevirt2pf" ctrlrange="0 0.78"/>
-        <position name="ring_pf2mf" joint="ring_pfvirt2mf" ctrlrange="0 0.78" kp="4"/>
+        <position name="ring_pf2mf" joint="ring_pfvirt2mf" ctrlrange="0 0.698" kp="4"/>
 
     </actuator>
 
@@ -145,7 +162,7 @@ limitations under the License.
         <fixed name="thumb_mf2df">
             <joint joint="thumb_pf2pfvirt" coef="1"/>
             <joint joint="thumb_pfvirt2mf" coef="1"/>
-            <joint joint="thumb_mf2df" coef="-1"/>
+            <joint joint="thumb_mf2df" coef="-0.895"/>
         </fixed>
 
         <!-- Index -->
@@ -160,7 +177,7 @@ limitations under the License.
         <fixed name="index_mf2df">
             <joint joint="index_pf2pfvirt" coef="1"/>
             <joint joint="index_pfvirt2mf" coef="1"/>
-            <joint joint="index_mf2df" coef="-1"/>
+            <joint joint="index_mf2df" coef="-0.895"/>
         </fixed>
 
         <!-- Middle -->
@@ -175,7 +192,7 @@ limitations under the License.
         <fixed name="middle_mf2df">
             <joint joint="middle_pf2pfvirt" coef="1"/>
             <joint joint="middle_pfvirt2mf" coef="1"/>
-            <joint joint="middle_mf2df" coef="-1"/>
+            <joint joint="middle_mf2df" coef="-0.895"/>
         </fixed>
 
         <!-- Ring -->
@@ -190,9 +207,7 @@ limitations under the License.
         <fixed name="ring_mf2df">
             <joint joint="ring_pf2pfvirt" coef="1"/>
             <joint joint="ring_pfvirt2mf" coef="1"/>
-            <joint joint="ring_mf2df" coef="-1"/>
+            <joint joint="ring_mf2df" coef="-0.895"/>
         </fixed>
-
-
     </tendon>
 </mujoco>

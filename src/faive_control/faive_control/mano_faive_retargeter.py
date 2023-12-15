@@ -68,7 +68,7 @@ class RetargeterNode:
         self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
 
         
-        self.scaling_coeffs = torch.tensor([0.6, 0.7, 0.75, 0.8, 0.7, 0.75, 0.8, 0.7, 0.75, 0.8]).to(self.device)
+        self.scaling_coeffs = torch.tensor([0.52, 0.58, 0.62, 0.7, 0.75, 0.8]).to(self.device)
         
         self.scaling_factors_set = hardcoded_keyvector_scaling
         
@@ -157,22 +157,18 @@ class RetargeterNode:
         u, v, w = [], [], []
 
         for i, (finger, finger_joints) in enumerate(keyvectors_mano.items()):
-            if i < 4:
+            if i < 3:
                 x.append(0)
                 y.append(0)
                 z.append(0)
-            elif i < 7:
-                x.append(keyvectors_mano["palm2thumb"][0, 0])
-                y.append(keyvectors_mano["palm2thumb"][0, 1])
-                z.append(keyvectors_mano["palm2thumb"][0, 2])
-            elif i < 9:
-                x.append(keyvectors_mano["palm2index"][0, 0])
-                y.append(keyvectors_mano["palm2index"][0, 1])
-                z.append(keyvectors_mano["palm2index"][0, 2])
+            elif i < 6:
+                x.append(keyvectors_mano["thumb2index"][0, 0])
+                y.append(keyvectors_mano["thumb2index"][0, 1])
+                z.append(keyvectors_mano["thumb2index"][0, 2])
             else:
-                x.append(keyvectors_mano["palm2middle"][0, 0])
-                y.append(keyvectors_mano["palm2middle"][0, 1])
-                z.append(keyvectors_mano["palm2middle"][0, 2])
+                x.append(keyvectors_mano["thumb2middle"][0, 0])
+                y.append(keyvectors_mano["thumb2middle"][0, 1])
+                z.append(keyvectors_mano["thumb2middle"][0, 2])
             u.append(finger_joints[0, 0])
             v.append(finger_joints[0, 1])
             w.append(finger_joints[0, 2])

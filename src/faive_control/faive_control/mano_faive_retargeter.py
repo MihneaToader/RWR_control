@@ -15,7 +15,7 @@ from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 
 from utils import retarget_utils, gripper_utils
 
-PINCH_RANGE = 0.033
+PINCH_RANGE = 0.0375
 
 class RetargeterNode:
     def __init__(
@@ -30,12 +30,14 @@ class RetargeterNode:
         Requires urdf file of hand (change urdf_path and urdf_filename)
         retarget_utils and gripper_utils contain functions and hardcoded values for the faive hand, will need to be changed for other hands
         '''
-        
+        device = "cuda"
         self.target_angles = None
 
         self.use_joints = True
 
         self.device = device
+
+        print(self.device)
         
         self.base_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -69,7 +71,7 @@ class RetargeterNode:
         self.root = torch.zeros(1, 3).to(self.device)
         self.palm_offset = torch.tensor([0.0, 0.0, 0.0]).to(self.device)
         
-        self.scaling_coeffs = torch.tensor([0.6, 0.7, 0.68, 0.66, 0.9, 0.88, 0.86, 0.8, 0.8, 0.8]).to(self.device)
+        self.scaling_coeffs = torch.tensor([0.8, 0.85, 0.9, 0.95, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]).to(self.device)
         
         self.scaling_factors_set = hardcoded_keyvector_scaling
         
@@ -80,16 +82,16 @@ class RetargeterNode:
         else:
             self.use_scalar_distance = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
 
-        self.figure = plt.figure()
-        self.ax = self.figure.add_subplot(111, projection='3d')
-        self.mano_plt = None
-        self.faive_plt = None
-        self.faive_vectors = None
-        self.mano_vectors = None
-        self.ani = FuncAnimation(self.figure, self.update_plot, interval=100)  # Update interval in milliseconds
-        self.ax.set_xlim([-0.05, 0.1])
-        self.ax.set_ylim([-0.05, 0.1])
-        self.ax.set_zlim([-0.05, 0.1])
+        # self.figure = plt.figure()
+        # self.ax = self.figure.add_subplot(111, projection='3d')
+        # self.mano_plt = None
+        # self.faive_plt = None
+        # self.faive_vectors = None
+        # self.mano_vectors = None
+        # self.ani = FuncAnimation(self.figure, self.update_plot, interval=100)  # Update interval in milliseconds
+        # self.ax.set_xlim([-0.05, 0.1])
+        # self.ax.set_ylim([-0.05, 0.1])
+        # self.ax.set_zlim([-0.05, 0.1])
 
         self.sub = rospy.Subscriber(
             '/ingress/mano', Float32MultiArray, self.callback, queue_size=1, buff_size=2**24)
@@ -144,47 +146,50 @@ class RetargeterNode:
 
         mano_palm = torch.mean(torch.cat([joints[[0], :], mano_pps["index"], mano_pps["ring"]], dim=0).to(
             self.device), dim=0, keepdim=True)
+        
+        # joints = retarget_utils.get_joints_angles(mano_joints_dict)
+        # print(joints)
 
         keyvectors_mano = retarget_utils.get_keyvectors(
             mano_fingertips, mano_palm)
-        rot_mat_z = torch.tensor(retarget_utils.rotation_matrix_z(np.pi/8 - np.pi/2).astype(np.float32))
-        rot_mat_x = torch.tensor(retarget_utils.rotation_matrix_x(np.pi).astype(np.float32))
+        rot_mat_z = torch.tensor(retarget_utils.rotation_matrix_z(np.pi/8 - np.pi/2).astype(np.float32)).to(self.device)
+        rot_mat_x = torch.tensor(retarget_utils.rotation_matrix_x(np.pi).astype(np.float32)).to(self.device)
         rot_mat = torch.matmul(rot_mat_x, rot_mat_z)
         for k, v in keyvectors_mano.items():
             keyvectors_mano[k] = torch.matmul(rot_mat, v.t()).t()
         norms_mano = {k: torch.norm(v) for k, v in keyvectors_mano.items()}
-        print(f"keyvectors_mano: {norms_mano}")
+        # print(f"keyvectors_mano: {norms_mano}")
         if norms_mano["thumb2index"] < PINCH_RANGE:
-            keyvectors_mano["thumb2index"] = torch.tensor([[0.0, 0.0, 0.0]])
+            keyvectors_mano["thumb2index"] = torch.tensor([[0.0, 0.0, 0.0]]).to(self.device)
         if norms_mano["thumb2middle"] < PINCH_RANGE:
-            keyvectors_mano["thumb2middle"] = torch.tensor([[0.0, 0.0, 0.0]])
+            keyvectors_mano["thumb2middle"] = torch.tensor([[0.0, 0.0, 0.0]]).to(self.device)
         if norms_mano["thumb2ring"] < PINCH_RANGE:
-            keyvectors_mano["thumb2ring"] = torch.tensor([[0.0, 0.0, 0.0]])
-        x, y, z = [], [], []
-        u, v, w = [], [], []
+            keyvectors_mano["thumb2ring"] = torch.tensor([[0.0, 0.0, 0.0]]).to(self.device)
+        # x, y, z = [], [], []
+        # u, v, w = [], [], []
 
-        for i, (finger, finger_joints) in enumerate(keyvectors_mano.items()):
-            if i < 4:
-                x.append(0)
-                y.append(0)
-                z.append(0)
-            elif i < 7:
-                x.append(keyvectors_mano["palm2thumb"][0, 0])
-                y.append(keyvectors_mano["palm2thumb"][0, 1])
-                z.append(keyvectors_mano["palm2thumb"][0, 2])
-            elif i < 9:
-                x.append(keyvectors_mano["palm2index"][0, 0])
-                y.append(keyvectors_mano["palm2index"][0, 1])
-                z.append(keyvectors_mano["palm2index"][0, 2])
-            else:
-                x.append(keyvectors_mano["palm2middle"][0, 0])
-                y.append(keyvectors_mano["palm2middle"][0, 1])
-                z.append(keyvectors_mano["palm2middle"][0, 2])
-            u.append(finger_joints[0, 0])
-            v.append(finger_joints[0, 1])
-            w.append(finger_joints[0, 2])
+        # for i, (finger, finger_joints) in enumerate(keyvectors_mano.items()):
+        #     if i < 4:
+        #         x.append(0)
+        #         y.append(0)
+        #         z.append(0)
+        #     elif i < 7:
+        #         x.append(keyvectors_mano["palm2thumb"][0, 0])
+        #         y.append(keyvectors_mano["palm2thumb"][0, 1])
+        #         z.append(keyvectors_mano["palm2thumb"][0, 2])
+        #     elif i < 9:
+        #         x.append(keyvectors_mano["palm2index"][0, 0])
+        #         y.append(keyvectors_mano["palm2index"][0, 1])
+        #         z.append(keyvectors_mano["palm2index"][0, 2])
+        #     else:
+        #         x.append(keyvectors_mano["palm2middle"][0, 0])
+        #         y.append(keyvectors_mano["palm2middle"][0, 1])
+        #         z.append(keyvectors_mano["palm2middle"][0, 2])
+        #     u.append(finger_joints[0, 0])
+        #     v.append(finger_joints[0, 1])
+        #     w.append(finger_joints[0, 2])
 
-        self.mano_vectors = [x,y,z,u,v,w]
+        # self.mano_vectors = [x,y,z,u,v,w]
 
         gc_limits_lower = gripper_utils.GC_LIMITS_LOWER
         gc_limits_upper = gripper_utils.GC_LIMITS_UPPER
@@ -194,8 +199,7 @@ class RetargeterNode:
                 self.joint_map @ (self.gc_joints/(180/np.pi)))
             fingertips = {}
             for finger, finger_tip in retarget_utils.FINGER_TO_TIP.items():
-                fingertips[finger] = chain_transforms[finger_tip].transform_points(
-                    self.root)
+                fingertips[finger] = chain_transforms[finger_tip].transform_points(self.root)
             # print(f"FINGERTIPS:{fingertips}")
             # print("+++++++++++++++++++++++++++++++++++++++++++++++")
             # print(f"MANO_JOINTS_DICT:{mano_joints_dict}")
@@ -232,50 +236,49 @@ class RetargeterNode:
 
             for i, (keyvector_faive, keyvector_mano) in enumerate(zip(keyvectors_faive.values(), keyvectors_mano.values())):
                 if not self.use_scalar_distance[i]:
-                    loss += self.loss_coeffs[i] * torch.norm(keyvector_mano -
-                                    keyvector_faive * self.scaling_coeffs[i].detach()) ** 2
+                    loss += self.loss_coeffs[i] * torch.norm(keyvector_mano - keyvector_faive * self.scaling_coeffs[i]) ** 2
                 else:
                     loss += self.loss_coeffs[i] * torch.norm(torch.norm(keyvector_mano) -
-                                    torch.norm(keyvector_faive * self.scaling_coeffs[i].detach())) ** 2
+                                    torch.norm(keyvector_faive * self.scaling_coeffs[i])) ** 2
 
             self.scaling_factors_set = True
             rospy.loginfo(f"Retargeting: Step: {step} Loss: {loss.item()}")
             self.opt.zero_grad()
             loss.backward()
+        # joints = retarget_utils.get_joints_angles(mano_joints_dict)
+        # print(joints)
             self.opt.step()
-            print(self.gc_joints)
             with torch.no_grad():
                 self.gc_joints[:] = torch.clamp(self.gc_joints, torch.tensor(gc_limits_lower).to(
                     self.device), torch.tensor(gc_limits_upper).to(self.device))
-            print(self.gc_joints)
 
         finger_joint_angles = self.gc_joints.detach().cpu().numpy()
 
         print(f'Retarget time: {(time.time() - start_time) * 1000} ms')
-        x, y, z = [], [], []
-        u, v, w = [], [], []
-        for i, finger_joints in enumerate(keyvectors_faive.values()):
-            if i < 4:
-                x.append(0)
-                y.append(0)
-                z.append(0)
-            elif i < 7:
-                x.append(keyvectors_faive["palm2thumb"][0, 0].detach() * self.scaling_coeffs[0].detach())
-                y.append(keyvectors_faive["palm2thumb"][0, 1].detach() * self.scaling_coeffs[0].detach())
-                z.append(keyvectors_faive["palm2thumb"][0, 2].detach() * self.scaling_coeffs[0].detach())
-            elif i < 9:
-                x.append(keyvectors_faive["palm2index"][0, 0].detach() * self.scaling_coeffs[1].detach())
-                y.append(keyvectors_faive["palm2index"][0, 1].detach() * self.scaling_coeffs[1].detach())
-                z.append(keyvectors_faive["palm2index"][0, 2].detach() * self.scaling_coeffs[1].detach())
-            else:
-                x.append(keyvectors_faive["palm2middle"][0, 0].detach() * self.scaling_coeffs[2].detach())
-                y.append(keyvectors_faive["palm2middle"][0, 1].detach() * self.scaling_coeffs[2].detach())
-                z.append(keyvectors_faive["palm2middle"][0, 2].detach() * self.scaling_coeffs[2].detach())
-            u.append(finger_joints[0, 0].detach() * self.scaling_coeffs[i].detach())
-            v.append(finger_joints[0, 1].detach() * self.scaling_coeffs[i].detach())
-            w.append(finger_joints[0, 2].detach() * self.scaling_coeffs[i].detach())
+        # x, y, z = [], [], []
+        # u, v, w = [], [], []
+        # for i, finger_joints in enumerate(keyvectors_faive.values()):
+        #     if i < 4:
+        #         x.append(0)
+        #         y.append(0)
+        #         z.append(0)
+        #     elif i < 7:
+        #         x.append(keyvectors_faive["palm2thumb"][0, 0].detach() * self.scaling_coeffs[0].detach())
+        #         y.append(keyvectors_faive["palm2thumb"][0, 1].detach() * self.scaling_coeffs[0].detach())
+        #         z.append(keyvectors_faive["palm2thumb"][0, 2].detach() * self.scaling_coeffs[0].detach())
+        #     elif i < 9:
+        #         x.append(keyvectors_faive["palm2index"][0, 0].detach() * self.scaling_coeffs[1].detach())
+        #         y.append(keyvectors_faive["palm2index"][0, 1].detach() * self.scaling_coeffs[1].detach())
+        #         z.append(keyvectors_faive["palm2index"][0, 2].detach() * self.scaling_coeffs[1].detach())
+        #     else:
+        #         x.append(keyvectors_faive["palm2middle"][0, 0].detach() * self.scaling_coeffs[2].detach())
+        #         y.append(keyvectors_faive["palm2middle"][0, 1].detach() * self.scaling_coeffs[2].detach())
+        #         z.append(keyvectors_faive["palm2middle"][0, 2].detach() * self.scaling_coeffs[2].detach())
+        #     u.append(finger_joints[0, 0].detach() * self.scaling_coeffs[i].detach())
+        #     v.append(finger_joints[0, 1].detach() * self.scaling_coeffs[i].detach())
+        #     w.append(finger_joints[0, 2].detach() * self.scaling_coeffs[i].detach())
 
-        self.faive_vectors = [x,y,z,u,v,w]
+        # self.faive_vectors = [x,y,z,u,v,w]
 
         return finger_joint_angles
 
@@ -317,7 +320,7 @@ class RetargeterNode:
 if __name__ == '__main__':
     rospy.init_node('mano_faive_retargeter', anonymous=True)
     retargeter = RetargeterNode(device="cpu")
-    plt.show()    # Display the plot window
+    # plt.show()    # Display the plot window
     r = rospy.Rate(30)
     while not rospy.is_shutdown():
         r.sleep()

@@ -49,15 +49,15 @@ def tendonlength_cage_joint(theta_cage_joint):
 def pose2tendon_finger(theta_Joint1, theta_Joint2):
    '''Input: controllable joint angles
       Output: array of tendon lengths for given joint angles'''
-   return [tendonlength_flexor_joint1(theta_Joint1),
-            tendonlength_extensor_joint1(theta_Joint1),
-            tendonlength_flexor_joint2(theta_Joint2), 
-            tendonlength_extensor_joint2(theta_Joint2)]
+   return [tendonlength_flexor_joint1(theta_Joint1 * 1.16667),
+            tendonlength_extensor_joint1(theta_Joint1 * 1.16667),
+            tendonlength_flexor_joint2(theta_Joint2 * 1.25), 
+            tendonlength_extensor_joint2(theta_Joint2 * 1.25)]
 
 def pose2tendon_thumb(theta_Joint1, theta_Joint2, theta_Joint3, theta_Joint4):
    return [tendonlength_cage_joint(theta_Joint1),
            theta_Joint2,
-           tendonlength_flexor_joint1(theta_Joint3),
-           tendonlength_extensor_joint1(theta_Joint3),
-           tendonlength_flexor_joint2(theta_Joint4), 
-           tendonlength_extensor_joint2(theta_Joint4)]
+           tendonlength_flexor_joint1(theta_Joint3 * 1.27778),
+           tendonlength_extensor_joint1(theta_Joint3 * 1.27778),
+           tendonlength_flexor_joint2(theta_Joint4 * 1.375), 
+           tendonlength_extensor_joint2(theta_Joint4 * 1.375)]

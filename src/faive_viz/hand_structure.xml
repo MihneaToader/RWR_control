@@ -45,7 +45,7 @@ limitations under the License.
                                     <body name="thumb_df" pos="0 0.0275 0" euler="0 0 0">
                                         <joint name="thumb_mf2df" axis="1 0 0" range="0 1.57079632679 "/>
                                         <geom name="thumb_df" mesh="thumb_df"/>
-                                        <body name="thumb_fingertip" pos="0 0.021 0.005"></body>
+                                        <body name="thumb_fingertip" pos="0 0.025 0.0025"></body>
                                     </body>
                                 </body>
                             </body>
@@ -71,7 +71,7 @@ limitations under the License.
                                 <body name="index_df" pos="0 0.0275 0" euler="0 0 0">
                                     <joint name="index_mf2df" axis="1 0 0" range="0 1.57079632679"/>
                                     <geom mesh="index_df"/>
-                                    <body name="index_fingertip" pos="0 0.021 0.005"></body>
+                                    <body name="index_fingertip" pos="0 0.025 0.0025"></body>
                                 </body>
                             </body>
                         </body>
@@ -96,7 +96,7 @@ limitations under the License.
                                 <body name="middle_df" pos="0 0.0275 0" euler="0 0 0">
                                     <joint name="middle_mf2df" axis="1 0 0" range="0 1.57079632679"/>
                                     <geom mesh="middle_df"/>
-                                    <body name="middle_fingertip" pos="0 0.021 0.005"></body>
+                                    <body name="middle_fingertip" pos="0 0.025 0.0025"></body>
                                 </body>
                             </body>
                         </body>
@@ -121,7 +121,7 @@ limitations under the License.
                                 <body name="ring_df" pos="0 0.0275 0" euler="0 0 0">
                                     <joint name="ring_mf2df" axis="1 0 0" range="0 1.57079632679"/>
                                     <geom mesh="ring_df"/>
-                                    <body name="ring_fingertip" pos="0 0.021 0.005"></body>
+                                    <body name="ring_fingertip" pos="0 0.025 0.0025"></body>
                                 </body>
                             </body>
                         </body>

@@ -3,7 +3,6 @@ import mujoco.viewer
 import threading
 import time
 import numpy as np
-import os
 
 
 class GripperControllerMujocoSim():

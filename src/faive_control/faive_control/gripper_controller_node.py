@@ -13,8 +13,7 @@ class GripperControlNode:
     def __init__(self, sim=False, sub_queue_size=1) -> None:
         self.sim=False
         if not self.sim:
-            self.gripper_controller = GripperController("/dev/ttyUSB0", calibration=False)
-            self.gripper_controller_sim = GripperControllerMujocoSim()
+            self.gripper_controller = GripperController("/dev/ttyUSB0", calibration=True)
         else:
             self.gripper_controller = GripperControllerMujocoSim()
 
@@ -31,11 +30,9 @@ class GripperControlNode:
         if not self.sim:
             unpacked_msg[0] += 70
             self.gripper_controller.write_desired_joint_angles(unpacked_msg)
-            unpacked_msg[0] -= 70
-            unpacked_msg[2:] = unpacked_msg[2:]/2
-            self.gripper_controller_sim.write_desired_joint_angles(unpacked_msg)
         else:
             unpacked_msg[2:] = unpacked_msg[2:]/2
+            self.gripper_controller.write_desired_joint_angles(unpacked_msg)
         
         self.last_received_gc = time.monotonic()
 
